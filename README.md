@@ -773,3 +773,121 @@ Which solution will meet these requirements?
        - 在工厂B里让“门卫”相信，工厂A的这台机器人可以来穿我们的工作服。
 
     </details>
+
+47. A company has AWS accounts in an organization in AWS Organizations. The organization includes a dedicated security account. All AWS account activity across all member accounts must be logged and reported to the dedicated security account. The company must retain all the activity logs in a secure storage location within the dedicated security account for 2 years. No changes or deletions of the logs are allowed. Which combination of steps will meet these requirements with the LEAST operational overhead? (Choose two.)
+    - [ ] A. In the dedicated security account, create an Amazon S3 bucket. Configure S3 Object Lock in compliance mode and a retention period of 2 years on the S3 bucket. Set the bucket policy to allow the organization's management account to write to the S3 bucket.
+    - [ ] B. In the dedicated security account, create an Amazon S3 bucket. Configure S3 Object Lock in compliance mode and a retention period of 2 years on the S3 bucket. Set the bucket policy to allow the organization's member accounts to write to the S3 bucket.
+    - [ ] C. In the dedicated security account, create an Amazon S3 bucket that has an S3 Lifecycle configuration that expires objects after 2 years. Set the bucket policy to allow the organization's member accounts to write to the S3 bucket.
+    - [ ] D. Create an AWS CloudTrail trail for the organization. Configure logs to be delivered to the logging Amazon S3 bucket in the dedicated security account.
+    - [ ] E. Turn on AWS CloudTrail in each account. Configure logs to be delivered to an Amazon S3 bucket that is created in the organization's management account. Forward the logs to the S3 bucket in the dedicated security account by using AWS Lambda and Amazon Kinesis Data Firehose.
+
+    <details>
+       <summary>Answer</summary>
+
+       - A: Correct -> This ensures that all logs are stored securely for 2 years with no changes or deletions allowed due to S3 Object Lock in compliance mode. Allowing the management account to write simplifies access control while ensuring logs are centrally stored.
+       - B: Incorrect -> It’s better to let the organization’s management account control this centrally instead of managing policies for each member account.
+       - C: Incorrect -> S3 Lifecycle does not prevent deletion or modification of logs, whereas S3 Object Lock in compliance mode ensures logs cannot be altered.
+       - D: Correct -> An organization trail captures all AWS account activity across all member accounts with a single CloudTrail setup, significantly reducing operational overhead. Logs are automatically delivered to the security account’s S3 bucket.
+       - E: Incorrect -> This introduces unnecessary operational complexity and costs. A single organization trail (Option D) already consolidates logs efficiently.
+
+    </details>
+
+48. An AWS account administrator created an IAM group and applied the following managed policy to require that each individual user authenticate using multi-factor authentication, After implementing the policy, the administrator receives reports that users are unable to perform Amazon EC2 commands using the AWS CLI. What should the administrator do to resolve this problem while still enforcing multi-factor authentication?
+
+    ```json
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+         {
+            "Effect": "Allow",
+            "Action": "ec2:*",
+            "Resource": "*"
+         },
+         {
+            "Sid": "BlockAnyAccessUnlessSignedInWithMFA",
+            "Effect": "Deny",
+            "Action": "ec2:*",
+            "Resource": "*",
+            "Condition": {
+               "BoolIfExists": {
+                  "aws:MultiFctorAuthPresent": false
+               }
+            }
+         }
+      ]
+    }
+    ```
+
+    - [ ] A. Change the value of aws:MultiFactorAuthPresent to true.
+    - [ ] B. Instruct users to run the aws sts get-session-token CLI command and pass the multi-factor authentication --serial-number and --token-code parameters. Use these resulting values to make API/CLI calls.
+    - [ ] C. Implement federated API/CLI access using SAML 2.0, then configure the identity provider to enforce multi-factor authentication.
+    - [ ] D. Create a role and enforce multi-factor authentication in the role trust policy. Instruct users to run the sts assume-role CLI command and pass --serial-number and --token-code parameters. Store the resulting values in environment variables. Add sts:AssumeRole to NotAction in the policy.
+
+    <details>
+       <summary>Answer</summary>
+
+       The policy has two statements the "Deny" statement overrides the "Allow" when users authenticate without MFA. When a user logs in via the AWS CLI using long-term IAM credentials, the MFA condition (aws:MultiFactorAuthPresent) is not automatically included, which results in denial. Users must obtain temporary credentials with MFA enabled. The AWS CLI allows users to authenticate with MFA using the aws sts get-session-token command: `aws sts get-session-token --serial-number arn:aws:iam::ACCOUNT-ID:mfa/DEVICE-NAME --token-code MFA-CODE`
+
+    </details>
+
+49. A company has AWS accounts that are in an organization in AWS Organizations. An Amazon S3 bucket in one of the accounts is publicly accessible. A security engineer must change the configuration so that the S3 bucket is no longer publicly accessible. The security engineer also must ensure that the S3 bucket cannot be made publicly accessible in the future. Which solution will meet these requirements?
+    - [ ] A. Configure the S3 bucket to use an AWS Key Management Service (AWS KMS) key. Encrypt all objects in the S3 bucket by creating a bucket policy that enforces encryption. Configure an SCP to deny the s3:GetObject action for the OU that contains the AWS account.
+    - [ ] B. Enable the PublicAccessBlock configuration on the S3 bucket. Configure an SCP to deny the s3:GetObject action for the OU that contains the AWS account.
+    - [ ] C. Enable the PublicAccessBlock configuration on the S3 bucket. Configure an SCP to deny the s3:PutPublicAccessBlock action for the OU that contains the AWS account.
+    - [ ] D. Configure the S3 bucket to use S3 Object Lock in governance mode. Configure an SCP to deny the s3:PutPublicAccessBlock action for the OU that contains the AWS account.
+
+    <details>
+       <summary>Answer</summary>
+
+      B is correct. AWS provides S3 Block Public Access settings that allow you to block public access to the bucket and its objects. Enabling PublicAccessBlock ensures that public access is blocked, even if ACLs or bucket policies allow it. A Service Control Policy (SCP) can be applied at the AWS Organizations level to deny any attempt to modify the PublicAccessBlock settings `s3:PutPublicAccessBlock`. This ensures that even if someone with the right permissions tries to disable the public access block, they will be denied.
+
+    </details>
+
+50. A company uses SAML federation with AWS Identity and Access Management (IAM) to provide internal users with SSO for their AWS accounts. The company's identity provider certificate was rotated as part of its normal lifecycle. Shortly after, users started receiving the following error when attempting to log in: "Error: Response Signature Invalid (Service: AWSSecurityTokenService; Status Code: 400; Error Code: InvalidIdentityToken)" A security engineer needs to address the immediate issue and ensure that it will not occur again. Which combination of steps should the security engineer take to accomplish this? (Choose two.)
+    - [ ] A. Download a new copy of the SAML metadata file from the identity provider. Create a new IAM identity provider entity. Upload the new metadata file to the new IAM identity provider entity.
+    - [ ] B. During the next certificate rotation period and before the current certificate expires, add a new certificate as the secondary to the identity provider. Generate a new metadata file and upload it to the IAM identity provider entity. Perform automated or manual rotation of the certificate when required.
+    - [ ] C. Download a new copy of the SAML metadata file from the identity provider. Upload the new metadata to the IAM identity provider entity configured for the SAML integration in question.
+    - [ ] D. During the next certificate rotation period and before the current certificate expires, add a new certificate as the secondary to the identity provider. Generate a new copy of the metadata file and create a new IAM identity provider entity. Upload the metadata file to the new IAM identity provider entity. Perform automated or manual rotation of the certificate when required.
+    - [ ] E. Download a new copy of the SAML metadata file from the identity provider. Create a new IAM identity provider entity. Upload the new metadata file to the new IAM identity provider entity. Update the identity provider configurations to pass a new IAM identity provider entity name in the SAML assertion.
+
+    <details>
+       <summary>Answer</summary>
+
+      The error "Response Signature Invalid (Service: AWSSecurityTokenService; Status Code: 400; Error Code: InvalidIdentityToken)" indicates that AWS IAM is rejecting the SAML response due to an invalid or mismatched signature. This typically happens when the identity provider (IdP) certificate is rotated, but the updated SAML metadata containing the new certificate is not uploaded to AWS IAM.
+
+      - C: Since the identity provider certificate was rotated, the SAML metadata file that includes the updated certificate must be re-uploaded to AWS IAM.
+      - B: To avoid a repeat of this issue, the best practice is to ensure seamless certificate rotation by configuring a secondary certificate before the existing certificate expires.
+
+    </details>
+
+51. A company is implementing a new application in a new AWS account. A VPC and subnets have been created for the application. The application has been peered to an existing VPC in another account in the same AWS Region for database access Amazon EC2 instances will regularly be created and terminated in the application VPC, but only some of them will need access to the databases in the peered VPC over TCP port 1521. A security engineer must ensure that only the EC2 instances that need access to the databases can access them through the network. How can the security engineer implement this solution?
+    - [ ] A. Create a new security group in the database VPC and create an inbound rule that allows all traffic from the IP address range of the application VPC. Add a new network ACL rule on the database subnets. Configure the rule to TCP port 1521 from the IP address range of the application VPC. Attach the new security group to the database instances that the application instances need to access.
+    - [ ] B. Create a new security group in the application VPC with an inbound rule that allows the IP address range of the database VPC over TCP port 1521. Create a new security group in the database VPC with an inbound rule that allows the IP address range of the application VPC over port 1521. Attach the new security group to the database instances and the application instances that need database access.
+    - [ ] C. Create a new security group in the application VPC with no inbound rules. Create a new security group in the database VPC with an inbound rule that allows TCP port 1521 from the new application security group in the application VPAttach the application security group to the application instances that need database access and attach the database security group to the database instances.
+    - [ ] D. Create a new security group in the application VPC with an inbound rule that allows the IP address range of the database VPC over TCP port 1521. Add a new network ACL rule on the database subnets. Configure the rule to allow all traffic from the IP address range of the application VPC. Attach the new security group to the application instances that need database access.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> Allows all traffic from the entire application VPC IP range, which is too broad and not recommended for fine-grained security. Also, unnecessary use of NACLs.
+      - B: Incorrect -> Uses IP ranges instead of security group references, making it difficult to manage dynamically created EC2 instances.
+      - C: Correct.
+      - D: Incorrect -> Similar to A, allowing all traffic from the application VPC IP range is not a best practice, and modifying network ACLs is unnecessary.
+
+    </details>
+
+52. An Amazon EC2 Auto Scaling group launches Amazon Linux EC2 instances and installs the Amazon CloudWatch agent to publish logs to Amazon CloudWatch Logs. The EC2 instances launch with an IAM role that has an IAM policy attached. The policy provides access to publish custom metrics to CloudWatch. The EC2 instances run in a private subnet inside a VPC. The VPC provides access to the internet for private subnets through a NAT gateway. A security engineer notices that no logs are being published to CloudWatch Logs for the EC2 instances that the Auto Scaling group launches. The security engineer validates that the CloudWatch Logs agent is running and is configured properly on the EC2 instances. In addition, the security engineer validates that network communications are working properly to AWS services. What can the security engineer do to ensure that the logs are published to CloudWatch Logs?
+    - [ ] A. Configure the IAM policy in use by the IAM role to have access to the required cloudwatch: API actions that will publish logs.
+    - [ ] B. Adjust the Amazon EC2 Auto Scaling service-linked role to have permissions to write to CloudWatch Logs.
+    - [ ] C. Configure the IAM policy in use by the IAM role to have access to the required AWS logs: API actions that will publish logs.
+    - [ ] D. Add an interface VPC endpoint to provide a route to CloudWatch Logs.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct.
+      - B: Incorrect -> The Auto Scaling service-linked role is not responsible for log publishing. The IAM role attached to the EC2 instances handles that.
+      - C: Incorrect -> There is no AWS `logs:` API action; the correct namespace is `cloudwatch:`, making A the correct choice.
+      - D: Incorrect -> Since the VPC already has internet access via a NAT gateway, there is no need to add a VPC endpoint.
+
+    </details>
