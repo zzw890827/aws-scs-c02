@@ -42,10 +42,10 @@
    <details>
       <summary>Answer</summary>
 
-      - A: Ensure that the CloudWatch agent is installed and configured on all EC2 instances in the Auto Scaling groups to forward both system and application logs to Amazon CloudWatch Logs.
-      - B: Within CloudWatch Logs, configure each log group’s retention to the time equivalent of 7 years (e.g., 2555 days). This ensures logs are automatically deleted once they age out, satisfying the “only keep logs for 7 years” requirement.
-      - C: The instances need permission to send logs to CloudWatch Logs. This is done by attaching an IAM role with the necessary policy (e.g., `logs:CreateLogGroup`, `logs:CreateLogStream`, `logs:PutLogEvents`) to the launch configuration or launch template.
-
+      - A: Wrong -> This action may disrupt legitimate application functions if the IAM user is still needed.
+      - B: Wrong -> While Amazon Detective provides great investigative tools, CloudTrail Insights and CloudTrail Lake are more suited for analyzing API anomalies at a detailed level. Amazon Detective is useful for broader security investigations but not necessarily the most quick way to analyze IAM anomalies.
+      - C: Wrong -> Immediately applying a DenyAll policy without full investigation might cause unintended access issues.
+      - D: Correct.
    </details>
 
 4. A security engineer is designing an IAM policy to protect AWS API operations. The policy must enforce multi-factor authentication (MFA) for IAM users to access certain services in the AWS production account. Each session must remain valid for only 2 hours. Which combination of conditions must the security engineer add to the IAM policy to meet these requirements? (Choose two.) The current version of the IAM policy is as follows:
@@ -889,5 +889,219 @@ Which solution will meet these requirements?
       - B: Incorrect -> The Auto Scaling service-linked role is not responsible for log publishing. The IAM role attached to the EC2 instances handles that.
       - C: Incorrect -> There is no AWS `logs:` API action; the correct namespace is `cloudwatch:`, making A the correct choice.
       - D: Incorrect -> Since the VPC already has internet access via a NAT gateway, there is no need to add a VPC endpoint.
+
+    </details>
+
+53. A company hosts an application on Amazon EC2 that is subject to specific rules for regulatory compliance. One rule states that traffic to and from the workload must be inspected for network-level attacks. This involves inspecting the whole packet. To comply with this regulatory rule, a security engineer must install intrusion detection software on a c5n.4xlarge EC2 instance. The engineer must then configure the software to monitor traffic to and from the application instances. What should the security engineer do next?
+    - [ ] A. Place the network interface in promiscuous mode to capture the traffic
+    - [ ] B. Configure VPC Flow Logs to send traffic to the monitoring EC2 instance using a Network Load Balancer.
+    - [ ] C. Configure VPC traffic mirroring to send traffic to the monitoring EC2 instance using a Network Load Balancer.
+    - [ ] D. Use Amazon Inspector to detect network-level attacks and trigger an AWS Lambda function to send the suspicious packets to the EC2 instance.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> AWS does not allow placing Elastic Network Interfaces (ENIs) into promiscuous mode.
+      - B: Incorrect -> VPC Flow Logs (option B) only capture metadata (not the full packet), making it insufficient for deep packet inspection.
+      - C: Correct -> VPC Traffic Mirroring allows you to capture full packets from network interfaces and send them to a target (such as an EC2 instance running intrusion detection software). A Network Load Balancer (NLB) can be used to distribute mirrored traffic to multiple monitoring instances for scalability.
+      - D: Incorrect -> It is primarily used for vulnerability management, not deep network traffic inspection.
+
+    </details>
+
+54. A company has a VPC that has no internet access and has the private DNS hostnames option enabled. An Amazon Aurora database is running inside the VPC. A security engineer wants to use AWS Secrets Manager to automatically rotate the credentials for the Aurora database. The security engineer configures the Secrets Manager default AWS Lambda rotation function to run inside the same VPC that the Aurora database uses. However, the security engineer determines that the password cannot be rotated properly because the Lambda function cannot communicate with the Secrets Manager endpoint. What is the MOST secure way that the security engineer can give the Lambda function the ability to communicate with the Secrets Manager endpoint?
+    - [ ] A. Add a NAT gateway to the VPC to allow access to the Secrets Manager endpoint.
+    - [ ] B. Add a gateway VPC endpoint to the VPC to allow access to the Secrets Manager endpoint.
+    - [ ] C. Add an interface VPC endpoint to the VPC to allow access to the Secrets Manager endpoint.
+    - [ ] D. Add an internet gateway for the VPC to allow access to the Secrets Manager endpoint.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> A NAT gateway allows outbound internet access for resources in a private subnet, but this is unnecessary and less secure than using an interface VPC endpoint.
+      - B: Incorrect -> Gateway endpoints only support Amazon S3 and DynamoDB, not AWS Secrets Manager.
+      - C: Correct -> Interface endpoints use AWS PrivateLink to establish a private connection between the VPC and the AWS service (Secrets Manager in this case).
+      - D: Incorrect -> An internet gateway would expose the VPC to the public internet, reducing security. The Lambda function does not need internet access, just private access to Secrets Manager.
+
+    </details>
+
+55. A company has two AWS accounts: Account A and Account B. Each account has a VPC. An application that runs in the VPC in Account A needs to write to an Amazon S3 bucket in Account B. The application in Account A already has permission to write to the S3 bucket in Account B. The application and the S3 bucket are in the same AWS Region. The company cannot send network traffic over the public internet. Which solution will meet these requirements?
+    - [ ] A. In both accounts, create a transit gateway and VPC attachments in a subnet in each Availability Zone. Update the VPC route tables.
+    - [ ] B. Deploy a software VPN appliance in Account A. Create a VPN connection between the software VPN appliance and a virtual private gateway in Account B.
+    - [ ] C. Create a VPC peering connection between the VPC in Account A and the VPC in Account B. Update the VPC route tables, network ACLs, and security groups to allow network traffic between the peered IP ranges
+    - [ ] D. In Account A, create a gateway VPC endpoint for Amazon S3. Update the VPC route table in Account A.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> A transit gateway is mainly used for connecting multiple VPCs or hybrid networks.
+      - B: Incorrect -> A VPN is used for connecting on-premises to AWS or interconnecting VPCs across AWS accounts. It does not provide direct access to S3 without routing through an internet gateway or another AWS service.
+      - C: Incorrect -> S3 is a regional AWS service and does not reside inside a VPC, so VPC peering does not help with direct S3 access.
+      - D: Correct -> A gateway VPC endpoint allows private communication between resources in a VPC and Amazon S3, without requiring internet access.
+
+    </details>
+
+56. An online media company has an application that customers use to watch events around the world. The application is hosted on a fleet of Amazon EC2 instances that run Amazon Linux 2. The company uses AWS Systems Manager to manage the EC2 instances. The company applies patches and application updates by using the AWS-AmazonLinux2DefaultPatchBaseline patching baseline in Systems Manager Patch Manager. The company is concerned about potential attacks on the application during the week of an upcoming event. The company needs a solution that can immediately deploy patches to all the EC2 instances in response to a security incident or vulnerability. The solution also must provide centralized evidence that the patches were applied successfully. Which combination of steps will meet these requirements? (Choose two.)
+    - [ ] A. Create a new patching baseline in Patch Manager. Specify Amazon Linux 2 as the product. Specify Security as the classification. Set the automatic approval for patches to 0 days. Ensure that the new patching baseline is the designated default for Amazon Linux 2.
+    - [ ] B. Use the Patch Now option with the scan and install operation in the Patch Manager console to apply patches against the baseline to all nodes. Specify an Amazon S3 bucket as the patching log storage option.
+    - [ ] C. Use the Clone function of Patch Manager to create a copy of the AWS-AmazonLmux2DefaultPatchBaseline built-in baseline. Set the automatic approval for patches to 1 day.
+    - [ ] D. Create a patch policy that patches all managed nodes and sends a patch operation log output to an Amazon S3 bucket. Use a custom scan schedule to set Patch Manager to check every hour for new patches. Assign the baseline to the patch policy.
+    - [ ] E. Use Systems Manager Application Manager to inspect the package versions that were installed on the EC2 instances. Additionally use Application Manager to validate that the patches were correctly installed.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct -> This ensures that all security-related patches are applied immediately (0-day approval). Designating it as the default baseline ensures all future patch operations apply the security patches.
+      - B: Correct -> Patch Now allows for immediate patch deployment instead of waiting for scheduled patch cycles. Storing logs in Amazon S3 ensures centralized evidence and auditability.
+      - C: Incorrect -> This still introduces a 1-day delay, which does not meet the requirement for immediate patching.
+      - D: Incorrect -> This provides frequent checks, but waiting for an hourly schedule does not ensure immediate application of patches.
+      - E: Incorrect -> Application Manager helps with verification, but it does not deploy patches. The company needs immediate deployment, not just validation.
+
+    </details>
+
+57. A developer operations team uses AWS Identity and Access Management (IAM) to manage user permissions. The team created an Amazon EC2 instance profile role that uses an AWS managed ReadOnlyAccess policy. When an application that is running on Amazon EC2 tries to read a file from an encrypted Amazon S3 bucket, the application receives an AccessDenied error. The team administrator has verified that the S3 bucket policy allows everyone in the account to access the S3 bucket. There is no object ACL that is attached to the file. What should the administrator do to fix the IAM access issue?
+    - [ ] A. Edit the ReadOnlyAccess policy to add kms:Decrypt actions.
+    - [ ] B. Add the EC2 IAM role as the authorized Principal to the S3 bucket policy.
+    - [ ] C. Attach an inline policy with kms:Decrypt permissions to the IAM role.
+    - [ ] D. Attach an inline policy with S3:* permissions to the IAM role.
+
+    <details>
+       <summary>Answer</summary>
+
+      The issue here is that the Amazon S3 bucket is encrypted, and the application running on the EC2 instance lacks permissions to decrypt the file. The ReadOnlyAccess policy does not include KMS decryption permissions, which are required to read objects encrypted with AWS Key Management Service (KMS).
+      - A: Incorrect -> AWS-managed policies cannot be edited.
+      - B: Incorrect -> The bucket policy already allows access to everyone in the account, so adding the IAM role as a principal won’t solve the KMS decryption issue.
+      - C: Correct -> The application needs `kms:Decrypt` permissions to decrypt the file. This can be done by attaching an inline policy or a separate managed policy granting `kms:Decrypt` access to the KMS key used for encryption.
+      - D: Incorrect -> While this would grant broader S3 access, it doesn’t resolve the KMS decryption issue, which is the root cause of the AccessDenied error.
+
+    </details>
+
+58. A company in France uses Amazon Cognito with the Cognito Hosted UI as an identity broker for sign-in and sign-up processes. The company is marketing an application and expects that all the application's users will come from France. When the company launches the application, the company's security team observes fraudulent sign-ups for the application. Most of the fraudulent registrations are from users outside of France. The security team needs a solution to perform custom validation at sign-up. Based on the results of the validation, the solution must accept or deny the registration request. Which combination of steps will meet these requirements? (Choose two.)
+    - [ ] A. Create a pre sign-up AWS Lambda trigger. Associate the Amazon Cognito function with the Amazon Cognito user pool.
+    - [ ] B. Use a geographic match rule statement to configure an AWS WAF web ACL. Associate the web ACL with the Amazon Cognito user pool.
+    - [ ] C. Configure an app client for the application's Amazon Cognito user pool. Use the app client ID to validate the requests in the hosted UI.
+    - [ ] D. Update the application's Amazon Cognito user pool to configure a geographic restriction setting.
+    - [ ] E. Use Amazon Cognito to configure a social identity provider (IdP) to validate the requests on the hosted UI.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct -> A pre sign-up Lambda function can validate the country of the user by checking the IP address or requiring specific attributes, and then reject sign-ups from users outside of France.
+      - B: Correct -> AWS WAF (Web Application Firewall) can be used to block requests based on geographic location (GeoMatch rule).
+      - C: Incorrect -> The app client ID is not used for validation of sign-up locations. It is primarily used for authentication and authorization, not for rejecting fraudulent registrations.
+      - D: Incorrect -> Amazon Cognito does not have built-in geographic restriction settings.
+      - E: Incorrect -> While social identity providers (like Google, Facebook) offer user authentication, they do not validate users based on geographic location.
+
+    </details>
+
+59. A security engineer is configuring AWS Config for an AWS account that uses a new 1AM entity. When the security engineer tries to configure AWS Config rules and automatic remediation options, errors occur. In the AWS CloudTrail logs, the security engineer sees the following error message: "Insufficient delivery policy to s3 bucket: DOC-EXAMPLE-BUCKET, unable to write to bucket, provided s3 key prefix is 'null'." Which combination of steps should the security engineer take to remediate this issue? (Choose two.)
+    - [ ] A. Check the Amazon S3 bucket policy. Verify that the policy allows the `config.amazonaws.com` service to write to the target bucket.
+    - [ ] B. Verify that the IAM entity has the permissions necessary to perform the `s3:GetBucketAcl` and `s3:PutObject*` operations to write to the target bucket.
+    - [ ] C. Verify that the Amazon S3 bucket policy has the permissions necessary to perform the s3:GetBucketAcl and `s3:PutObject*` operations to write to the target bucket.
+    - [ ] D. Check the policy that is associated with the IAM entity. Verify that the policy allows the `config.amazonaws.com` service to write to the target bucket.
+    - [ ] E. Verify that the AWS Config service role has permissions to invoke the `BatchGetResourceConfig` action instead of the `GetResourceConfigHistory` action and `s3:PutObject*` operation.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct -> AWS Config needs explicit permissions to write to the designated S3 bucket. The S3 bucket policy should allow AWS Config (config.amazonaws.com) to perform s3:PutObject operations.
+      - B: Correct -> The IAM entity (user, role, or service role) must have permissions to access the S3 bucket. It should have at least `s3:GetBucketAcl` to check the bucket's access control list and `s3:PutObject*` to store AWS Config logs.
+      - C: Incorrect -> The S3 bucket policy does not need to perform s3:GetBucketAcl itself; the IAM entity (such as the AWS Config service role) needs those permissions.
+      - D: Incorrect -> The AWS Config service does not directly write to S3 as an IAM entity. Instead, it assumes a service role with the appropriate permissions.
+      - E: Incorrect -> `BatchGetResourceConfig` and `GetResourceConfigHistory` are related to AWS Config’s ability to retrieve configuration details, but they are not related to writing configuration logs to S3.
+
+    </details>
+
+60. A company is worried about potential DDoS attacks. The company has a web application that runs on Amazon EC2 instances. The application uses Amazon S3 to serve static content such as images and videos. A security engineer must create a resilient architecture that can withstand DDoS attacks. Which solution will meet these requirements MOST cost-effectively?
+    - [ ] A. Create an Amazon CloudWatch alarm that invokes an AWS Lambda function when an EC2 instance’s CPU utilization reaches 90%. Program the Lambda function to update security groups that are attached to the EC2 instance to deny inbound ports 80 and 443.
+    - [ ] B. Put the EC2 instances into an Auto Scaling group behind an Elastic Load Balancing (ELB) load balancer. Use Amazon CioudFront with Amazon S3 as an origin.
+    - [ ] C. Set up a warm standby disaster recovery (DR) environment. Fail over to the warm standby DR environment if a DDoS attack is detected on the application.
+    - [ ] D. Subscribe to AWS Shield Advanced. Configure permissions to allow the Shield Response Team to manage resources on the company's behalf during a DDoS event.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> Blocking ports 80 and 443 during a DDoS attack effectively takes the application offline, making it unavailable to legitimate users. This is not a good approach for high availability.
+      - B: Correct
+      - C: Incorrect -> Setting up a warm standby is expensive and primarily used for disaster recovery, not for mitigating DDoS. Also, it doesn’t prevent attacks, only provides failover.
+      - D: Icorrect -> Shield Advanced offers strong DDoS protection but is costly (~$3,000/month). If cost-effectiveness is a priority, CloudFront with built-in AWS Shield Standard is a better option.
+
+    </details>
+
+61. A company has AWS accounts in an organization in AWS Organizations. The company needs to install a corporate software package on all Amazon EC2 instances for all the accounts in the organization. A central account provides base AMIs for the EC2 instances. The company uses AWS Systems Manager for software inventory and patching operations. A security engineer must implement a solution that detects EC2 instances ttjat do not have the required software. The solution also must automatically install the software if the software is not present. Which solution will meet these requirements?
+    - [ ] A. Provide new AMIs that have the required software pre-installed. Apply a tag to the AMIs to indicate that the AMIs have the required software. Configure an SCP that allows new EC2 instances to be launched only if the instances have the tagged AMIs. Tag all existing EC2 instances.
+    - [ ] B. Configure a custom patch baseline in Systems Manager Patch Manager. Add the package name for the required software to the approved packages list. Associate the new patch baseline with all EC2 instances. Set up a maintenance window for software deployment.
+    - [ ] C. Centrally enable AWS Config. Set up the ec2-managedinstance-applications-required AWS Config rule for all accounts Create an Amazon EventBridge rule that reacts to AWS Config events. Configure the EventBridge rule to invoke an AWS Lambda function that uses Systems Manager Run Command to install the required software.
+    - [ ] D. Create a new Systems Manager Distributor package for the required software. Specify the download location. Select all EC2 instances in the different accounts. Install the software by using Systems Manager Run Command.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> While tagging AMIs ensures new instances use the correct base image, it does not detect or fix software compliance on existing instances. SCPs (Service Control Policies) can restrict actions but cannot enforce or install software.
+      - B: Incorrect -> Patch Manager is mainly used for OS patching rather than for installing arbitrary software packages. It does not continuously enforce software presence or automatically install missing software when a new instance is launched.
+      - C: Correct -> The `ec2-managedinstance-applications-required` AWS Config rule ensures that specific software packages are installed on EC2 instances. The EventBridge rule invokes an AWS Lambda function that uses AWS Systems Manager Run Command to install the missing software on the non-compliant instance. AWS Config can be enabled centrally across all accounts in the AWS Organization using AWS Organizations integration.
+      - D: Icorrect -> This solution installs the software but lacks automatic enforcement when a new instance is launched or when an instance becomes non-compliant.
+
+    </details>
+
+62. A company is investigating controls to protect sensitive data. The company uses Amazon Simple Notification Service (Amazon SNS) topics to publish messages from application components to custom logging services. The company is concerned that an application component might publish sensitive data that will be accidentally exposed in transaction logs and debug logs. Which solution will protect the sensitive data in these messages from accidental exposure?
+    - [ ] A. Use Amazon Made to scan the SNS topics for sensitive data elements in the SNS messages. Create an AWS Lambda function that masks sensitive data inside the messages when Macie records a new finding.
+    - [ ] B. Configure an inbound message data protection policy. In the policy, include the De-identify operation to mask the sensitive data inside the messages. Apply the policy to the SNS topics.
+    - [ ] C. Configure the SNS topics with an AWS Key Management Service (AWS KMS) customer managed key to encrypt the data elements inside the messages. Grant permissions to all message publisher IAM roles to allow access to the key to encrypt data.
+    - [ ] D. Create an Amazon GuardDuty finding for sensitive data that is transmitted to the SNS topics. Create an AWS Security Hub custom remediation action to block messages that contain sensitive data from being delivered to subscribers of the SNS topics.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> Amazon Macie is designed for discovering and classifying sensitive data in Amazon S3. While you could use Macie to detect sensitive data in SNS logs stored in S3, it does not natively scan SNS messages in real time.
+      - B: Correct -> AWS SNS Inbound Message Data Protection helps detect and protect sensitive data before it is published to the topic. The De-identify operation masks sensitive data in messages before they are stored or transmitted. This approach ensures that sensitive information is handled securely at the point of ingestion, preventing exposure in transaction or debug logs.
+      - C: Incorrect -> Encrypting messages using AWS KMS protects data at rest and during transmission, but it does not prevent sensitive data from being published in the first place.
+      - D: Icorrect -> Amazon GuardDuty does not inspect SNS messages in real time for sensitive data.
+
+    </details>
+
+63. A security administrator has enabled AWS Security Hub for all the AWS accounts in an organization in AWS Organizations. The security team wants near-real-time response and remediation for deployed AWS resources that do not meet security standards. All changes must be centrally logged for auditing purposes. The organization has reached the quotas for the number of SCPs attached to an OU and SCP document size. The team wants to avoid making any changes to any of the SCPs. The solution must maximize scalability and cost-effectiveness. Which combination of actions should the security administrator take to meet these requirements? (Choose three.)
+    - [ ] A. Create an AWS Config custom rule to detect configuration changes to AWS resources. Create an AWS Lambda function to remediate the AWS resources in the delegated administrator AWS account.
+    - [ ] B. Use AWS Systems Manager Change Manager to track configuration changes to AWS resources. Create a Systems Manager document to remediate the AWS resources in the delegated administrator AWS account.
+    - [ ] C. Create a Security Hub custom action to reference in an Amazon EventBridge event rule in the delegated administrator AWS account.
+    - [ ] D. Create an Amazon EventBridge event rule to Invoke an AWS Lambda function that will take action on AWS resources.
+    - [ ] E. Create an Amazon EventBridge event rule to invoke an AWS Lambda function that will evaluate AWS resource configuration for a set of API requests and create a finding for noncompllant AWS resources.
+    - [ ] F. Create an Amazon EventBridge event rule to invoke an AWS Lambda function on a schedule to assess specific AWS Config rules.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> While AWS Config is useful, it is more focused on periodic assessments rather than near-real-time detection.
+      - B: Incorrect -> This is more for tracking and approval workflows, not real-time enforcement.
+      - C: Correct -> Security Hub custom actions allow you to take specific actions when a finding is generated. By referencing it in an EventBridge rule, you can trigger remediation workflows based on Security Hub findings.
+      - D: Correct -> EventBridge can be used to detect security violations and trigger an AWS Lambda function to automatically remediate noncompliant AWS resources in near real-time.
+      - E: Correct -> This ensures that configuration changes are evaluated in real time and that findings are generated when noncompliance is detected.
+
+    </details>
+
+64. A company runs a global ecommerce website that is hosted on AWS. The company uses Amazon CloudFront to serve content to its user base. The company wants to block inbound traffic from a specific set of countries to comply with recent data regulation policies. Which solution will meet these requirements MOST cost-effectively?
+    - [ ] A. Create an AWS WAF web ACL with an IP match condition to deny the countries' IP ranges. Associate the web ACL with the CloudFront distribution.
+    - [ ] B. Create an AWS WAF web ACL with a geo match condition to deny the specific countries. Associate the web ACL with the CloudFront distribution.
+    - [ ] C. Use the geo restriction feature in CloudFront to deny the specific countries.
+    - [ ] D. Use geolocation headers in CloudFront to deny the specific countries.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A&B: Incorrect -> AWS WAF incurs extra costs for rules and web ACLs, making it a less cost-effective choice unless additional custom security rules are needed.
+      - C: Correct -> CloudFront has a built-in geo restriction feature that allows blocking access to specific countries without additional costs beyond standard CloudFront pricing.
+      - D: Incorrect -> Geolocation headers in CloudFront provides location details but does not itself block requests. It requires additional processing at the origin or in AWS WAF, adding complexity and cost.
+
+    </details>
+
+65. A company uses AWS Organizations and has many AWS accounts. The company has a new requirement to use server-side encryption with customer-provided keys (SSE-C) on all new object uploads to Amazon S3 buckets. A security engineer is creating an SCP that includes a Deny effect for the s3:PutObject action. Which condition must the security engineer addz   to the SCP to enforce the new SSE-C requirement?
+    - [ ] A. `"condition":{"Null": {"s3:x-amz-server-side-encryption-customer-algorithm": true}}`
+    - [ ] B. `"condition":{"StringNotEqual": {"s3:x-amz-server-side-encryption": "aws:kms"}}`
+    - [ ] C. `"condition":{"StringNotEqual": {"s3:x-amz-server-side-encryption-customer-algorithm": "AES256"}}`
+    - [ ] D. `"condition":{"Null": {"s3:x-amz-server-side-encryption": true}}`
+
+    <details>
+       <summary>Answer</summary>
+
+      -A: Correct -> The "Null" condition checks whether the specified key is absent. It should be {"Null": {"s3:x-amz-server-side-encryption-customer-algorithm": "true"}} to deny uploads missing this header. This ensures that SSE-C is always used, because without this header, SSE-C cannot be applied.
 
     </details>
