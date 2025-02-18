@@ -1102,6 +1102,178 @@ Which solution will meet these requirements?
     <details>
        <summary>Answer</summary>
 
-      -A: Correct -> The "Null" condition checks whether the specified key is absent. It should be {"Null": {"s3:x-amz-server-side-encryption-customer-algorithm": "true"}} to deny uploads missing this header. This ensures that SSE-C is always used, because without this header, SSE-C cannot be applied.
+      - A: Correct -> The "Null" condition checks whether the specified key is absent. It should be {"Null": {"s3:x-amz-server-side-encryption-customer-algorithm": "true"}} to deny uploads missing this header. This ensures that SSE-C is always used, because without this header, SSE-C cannot be applied.
+
+    </details>
+
+66. A company has a batch-processing system that uses Amazon S3, Amazon EC2, and AWS Key Management Service (AWS KMS). The system uses two AWS accounts: Account A and Account B. Account A hosts an S3 bucket that stores the objects that will be processed. The S3 bucket also stores the results of the processing. All the S3 bucket objects are encrypted by a KMS key that is managed in Account A. Account B hosts a VPC that has a fleet of EC2 instances that access the S3 bucket in Account A by using statements in the bucket policy. The VPC was created with DNS hostnames enabled and DNS resolution enabled. A security engineer needs to update the design of the system without changing any of the system's code. No AWS API calls from the batch-processing EC2 instances can travel over the internet. Which combination of steps will meet these requirements? (Choose two.)
+    - [ ] A. In the Account B VPC, create a gateway VPC endpoint for Amazon S3. For the gateway VPC endpoint, create a resource policy that allows the s3:GetObject, s3:ListBucket, s3:PutObject, and s3:PutObjectAcl actions for the S3 bucket.
+    - [ ] B. In the Account B VPC, create an interface VPC endpoint for Amazon S3. For the interface VPC endpoint, create a resource policy that allows the s3:GetObject, s3:ListBucket, s3:PutObject, and s3:PutObjectAcl actions for the S3 bucket.
+    - [ ] C. In the Account B VPC, create an interface VPC endpoint for AWS KMS. For the interface VPC endpoint, create a resource policy that allows the kms:Encrypt, kms:Decrypt, and kms:GenerateDataKey actions for the KMS key. Ensure that private DNS is turned on for the endpoint.
+    - [ ] D. In the Account B VPC, create an interface VPC endpoint for AWS KMS. For the interface VPC endpoint, create a resource policy that allows the kms:Encrypt, kms:Decrypt, and kms:GenerateDataKey actions for the KMS key. Ensure that private DNS is turned off for the endpoint.
+    - [ ] E. In the Account B VPC, verify that the S3 bucket policy allows the s3:PutObjectAcl action for cross-account use. In the Account B VPC, create a gateway VPC endpoint for Amazon S3. For the gateway VPC endpoint, create a resource policy that allows the s3:GetObject, s3:ListBucket, and s3:PutObject actions for the S3 bucket.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct -> Gateway VPC endpoints for S3 allow EC2 instances in a VPC to access Amazon S3 without using the public internet.
+      - C: Private DNS must be turned on for the endpoint to allow the EC2 instances to resolve the AWS KMS endpoint using the default KMS domain name (kms.<region>.amazonaws.com).
+
+    </details>
+
+67. A security engineer is designing an IAM policy for a script that will use the AWS CLI. The script currently assumes an IAM role that is attached to three AWS managed IAM policies: AmazonEC2FullAccess, AmazonDynamoDBFullAccess, and AmazonVPCFullAccess. The security engineer needs to construct a least privilege IAM policy that will replace the AWS managed IAM policies that are attached to this role. Which solution will meet these requirements in the MOST operationally efficient way?
+    - [ ] A. In AWS CloudTrail, create a trail for management events. Run the script with the existing AWS managed IAM policies. Use IAM Access Analyzer to generate a new IAM policy that is based on access activity in the trail. Replace the existing AWS managed IAM policies with the generated IAM policy for the role.
+    - [ ] B. Remove the existing AWS managed IAM policies from the role. Attach the IAM Access Analyzer Role Policy Generator to the role. Run the script. Return to IAM Access Analyzer and generate a least privilege IAM policy. Attach the new IAM policy to the role.
+    - [ ] C. Create an account analyzer in IAM Access Analyzer. Create an archive rule that has a filter that checks whether the PrincipalArn value matches the ARN of the role. Run the script. Remove the existing AWS managed IAM policies from the role.
+    - [ ] D. In AWS CloudTrail, create a trail for management events. Remove the existing AWS managed IAM policies from the role. Run the script. Find the authorization failure in the trail event that is associated with the script. Create a new IAM policy that includes the action and resource that caused the authorization failure. Repeat the process until the script succeeds. Attach the new IAM policy to the role.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct ->
+        - Ensures Operational Efficiency: This approach allows the script to run normally without disruption while CloudTrail logs all the API calls made by the script. IAM Access Analyzer then generates a least privilege IAM policy based on the actual access patterns.
+        - Minimizes Manual Work: Instead of manually identifying required permissions (as in option D), this method automates policy generation using IAM Access Analyzer.
+        - Ensures Least Privilege: By analyzing the access logs, IAM Access Analyzer can construct a fine-grained policy that only includes necessary permissions.
+      - B: Incorrect -> This option suggests removing permissions before running the script, which will cause immediate failures and disrupt operations. Also, there is no feature called "IAM Access Analyzer Role Policy Generator."
+      - C: Incorrect -> Creating an account analyzer and an archive rule will not generate a least privilege policy. IAM Access Analyzer does not create IAM policies this way.
+      - D: Incorrect -> This method involves an iterative manual process of removing permissions, running the script, checking failures, and adding permissions back—this is inefficient and time-consuming.
+
+    </details>
+
+68. A security engineer is designing a cloud architecture to support an application. The application runs on Amazon EC2 instances and processes sensitive information, including credit card numbers. The application will send the credit card numbers to a component that is running in an isolated environment. The component will encrypt, store, and decrypt the numbers. The component then will issue tokens to replace the numbers in other parts of the application. The component of the application that manages the tokenization process will be deployed on a separate set of EC2 instances. Other components of the application must not be able to store or access the credit card numbers. Which solution will meet these requirements?
+    - [ ] A. Use EC2 Dedicated Instances for the tokenization component of the application.
+    - [ ] B. Place the EC2 instances that manage the tokenization process into a partition placement group.
+    - [ ] C. Create a separate VPDeploy new EC2 instances into the separate VPC to support the data tokenization.
+    - [ ] D. Deploy the tokenization code onto AWS Nitro Enclaves that are hosted on EC2 instances.
+
+    <details>
+       <summary>Answer</summary>
+
+      - D: Correct -> AWS Nitro Enclaves provides an isolated execution environment for processing highly sensitive data, such as credit card numbers. It is designed for workloads that require secure data processing and tokenization while ensuring that even the parent EC2 instance cannot access the sensitive information.
+
+    </details>
+
+69. A company wants to receive automated email notifications when AWS access keys from developer AWS accounts are detected on code repository sites. Which solution will provide the required email notifications?
+    - [ ] A. Create an Amazon EventBridge rule to send Amazon Simple Notification Service (Amazon SNS) email notifications for Amazon GuardDuty `UnauthorizedAccess:IAMUser/lnstanceCredentialExfiltration.OutsideAWS` findings.
+    - [ ] B. Change the AWS account contact information for the Operations type to a separate email address. Periodically poll this email address for notifications.
+    - [ ] C. Create an Amazon EventBridge rule that reacts to AWS Health events that have a value of Risk for the service category. Configure email notifications by using Amazon Simple Notification Service (Amazon SNS).
+    - [ ] D. Implement new anomaly detection software. Ingest AWS CloudTrail logs. Configure monitoring for ConsoleLogin events in the AWS Management Console. Configure email notifications from the anomaly detection software.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct -> Amazon GuardDuty is a threat detection service that monitors for unauthorized behavior in AWS accounts. It has a specific finding type (UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.OutsideAWS) that detects when AWS credentials are exposed and used outside AWS.
+      - B: Incorrect -> Changing the AWS account contact information does not provide automatic notifications specific to credential exposure.
+      - C: Incorrect -> AWS Health events mostly report service issues and do not specifically detect leaked credentials in external repositories.
+      - D: Incorrect -> CloudTrail logs ConsoleLogin events, but this does not directly detect AWS credential leaks in code repositories.
+
+    </details>
+
+70. A company deployed an Amazon EC2 instance to a VPC on AWS. A recent alert indicates that the EC2 instance is receiving a suspicious number of requests over an open TCP port from an external source. The TCP port remains open for long periods of time. The company's security team needs to stop all activity to this port from the external source to ensure that the EC2 instance is not being compromised. The application must remain available to other users. Which solution will meet these requirements?
+    - [ ] A. Update the network ACL that is attached to the subnet that is associated with the EC2 instance. Add a Deny statement for the port and the source IP addresses.
+    - [ ] B. Update the elastic network interface security group that is attached to the EC2 instance to remove the port from the inbound rule list.
+    - [ ] C. Update the elastic network interface security group that is attached to the EC2 instance by adding a Deny entry in the inbound list for the port and the source IP addresses.
+    - [ ] D. Create a new network ACL for the subnet. Deny all traffic from the EC2 instance to prevent data from being removed.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct -> Network ACLs (NACLs), on the other hand, are stateless and allow both Allow and Deny rules. By adding a Deny rule for the specific port and source IP addresses, the company can effectively block traffic from the external attacker while keeping the application accessible to other legitimate users.
+      - BC: Incorrect -> Security Groups (used in options B and C) do not support explicit "Deny" rules—they are stateful and only allow rules that permit traffic, but there is no way to explicitly deny specific sources while allowing others.
+      - D: Incorrect -> Creating a new network ACL and denying all traffic from the EC2 instance is too broad and unnecessary—it would completely block the instance’s communication, which is not required.
+
+    </details>
+
+71. A company has AWS accounts that are in an organization in AWS Organizations. A security engineer needs to set up AWS Security Hub in a dedicated account for security monitoring. The security engineer must ensure that Security Hub automatically manages all existing accounts and all new accounts that are added to the organization. Security Hub also must receive findings from all AWS Regions. Which combination of actions will meet these requirements with the LEAST operational overhead? (Choose two.)
+    - [ ] A. Configure a finding aggregation Region for Security Hub. Link the other Regions to the aggregation Region.
+    - [ ] B. Create an AWS Lambda function that routes events from other Regions to the dedicated Security Hub account. Create an Amazon EventBridge rule to invoke the Lambda function.
+    - [ ] C. Turn on the option to automatically enable accounts for Security Hub.
+    - [ ] D. Create an SCP that denies the securityhub:DisableSecurityHub permission. Attach the SCP to the organization’s root account.
+    - [ ] E. Configure services in other Regions to write events to an AWS CloudTrail organization trail. Configure Security Hub to read events from the trail.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct -> Security Hub supports cross-Region aggregation, allowing you to collect findings from multiple Regions into a single Region. This ensures that Security Hub receives findings from all AWS Regions with minimal manual effort. This approach provides centralized visibility into security findings, reducing operational overhead.
+      - B: Incorrect -> This is unnecessary because Security Hub natively supports cross-Region aggregation. Using Lambda adds unnecessary complexity.
+      - C: Correct -> Security Hub provides an option to automatically enable Security Hub for new AWS accounts that are added to the organization. This ensures that Security Hub is consistently activated for all existing and future accounts in the AWS Organization without requiring manual intervention. This is the best way to meet the requirement of managing all existing and new accounts automatically.
+      - D: Incorrect -> While this could prevent users from disabling Security Hub, it does not help in enabling or managing Security Hub across accounts, which is the main requirement.
+      - E: Incorrect -> Security Hub does not rely on CloudTrail to receive findings. Security Hub integrates directly with AWS services to collect findings.
+
+    </details>
+
+72. A security engineer is implementing a solution to allow users to seamlessly encrypt Amazon S3 objects without having to touch the keys directly. The solution must be highly scalable without requiring continual management. Additionally, the organization must be able to immediately delete the encryption keys. Which solution meets these requirements?
+    - [ ] A. Use AWS KMS with AWS managed keys and the ScheduleKeyDeletion API with a PendingWindowInDays set to 0 to remove the keys if necessary.
+    - [ ] B. Use KMS with AWS imported key material and then use the DeleteImportedKeyMaterial API to remove the key material if necessary.
+    - [ ] C. Use AWS CloudHSM to store the keys and then use the CloudHSM API or the PKCS11 library to delete the keys if necessary.
+    - [ ] D. Use the Systems Manager Parameter Store to store the keys and then use the service API operations to delete the keys if necessary.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> AWS does not allow immediate key deletion for AWS-managed keys. The ScheduleKeyDeletion API requires a minimum waiting period of 7 days, which does not meet the "immediate deletion" requirement.
+      - B: Correct -> AWS Key Management Service (KMS) allows users to encrypt Amazon S3 objects seamlessly while managing encryption keys behind the scenes. When using AWS KMS with customer-imported key material, you can use the DeleteImportedKeyMaterial API to immediately delete the key material.
+      - C: Incorrect -> CloudHSM is a dedicated hardware security module that requires more management overhead.
+      - D: Incorrect -> Parameter Store is not meant for cryptographic key management.
+
+    </details>
+
+73. A company needs to implement DNS Security Extensions (DNSSEC) for a specific subdomain. The subdomain is already registered with Amazon Route 53. A security engineer has enabled DNSSEC signing and has created a key-signing key (KSK). When the security engineer tries to test the configuration, the security engineer receives an error for a broken trust chain. What should the security engineer do to resolve this error?
+    - [ ] A. Replace the KSK with a zone-signing key (ZSK).
+    - [ ] B. Deactivate and then activate the KSK.
+    - [ ] C. Create a Delegation Signer (DS) record in the parent hosted zone.
+    - [ ] D. Create a Delegation Signer (DS) record in the subdomain.
+
+    <details>
+       <summary>Answer</summary>
+
+      - C: Correct -> The error indicating a "broken trust chain" suggests that the parent zone does not have a proper delegation to the subdomain's DNSSEC configuration. For DNSSEC to work correctly, the trust chain must be established from the root domain to the subdomain. This is done by:
+        - Signing the subdomain: The security engineer has already enabled DNSSEC signing and created a key-signing key (KSK).
+        - Creating a DS record in the parent hosted zone: The Delegation Signer (DS) record contains the hash of the KSK, which allows resolvers to verify the authenticity of the subdomain's DNSSEC signature. This record must be placed in the parent hosted zone.
+
+    </details>
+
+74. A company used AWS Organizations to set up an environment with multiple AWS accounts. The company's organization currently has two AWS accounts, and the company expects to add more than 50 AWS accounts during the next 12 months. The company will require all existing and future AWS accounts to use Amazon GuardDuty. Each existing AWS account has GuardDuty active. The company reviews GuardDuty findings by logging into each AWS account individually. The company wants a centralized view of the GuardDuty findings for the existing AWS accounts and any future AWS accounts. The company also must ensure that any new AWS account has GuardDuty automatically turned on. Which solution will meet these requirements?
+    - [ ] A. Enable AWS Security Hub in the organization's management account. Configure GuardDuty within the management account to send all GuardDuty findings to Security Hub.
+    - [ ] B. Create a new AWS account in the organization. Enable GuardDuty in the new account. Designate the new account as the delegated administrator account for GuardDuty. Configure GuardDuty to add existing accounts as member accounts. Select the option to automatically add new AWS accounts to the organization.
+    - [ ] C. Create a new AWS account in the organization. Enable GuardDuty in the new account. Enable AWS Security Hub in each account. Select the option to automatically add new AWS accounts to the organization.
+    - [ ] D. Enable AWS Security Hub in the organization's management account. Designate the management account as the delegated administrator account for Security Hub. Add existing accounts as member accounts. Select the option to automatically add new AWS accounts to the organization. Send all Security Hub findings to the organization's GuardDuty account.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> Security Hub aggregates security findings from multiple AWS security services, but simply enabling it in the management account does not make it a centralized GuardDuty view.
+      - B: Correct -> AWS allows the designation of a delegated administrator account for GuardDuty. This account can centrally manage GuardDuty findings across all AWS accounts in the organization. By enabling GuardDuty in this new account and making it the delegated administrator, all GuardDuty findings from the existing and future accounts can be viewed centrally. GuardDuty provides an option to automatically add new AWS accounts as member accounts. This ensures that any new AWS account in the organization will have GuardDuty enabled without manual intervention.
+      - C: Incorrect -> This option does not specify setting up a delegated administrator for GuardDuty, meaning it does not fully centralize the findings.
+      - D: Incorrect -> Security Hub does not serve as the centralized GuardDuty findings manager. Instead, GuardDuty should be managed through a delegated administrator.
+
+    </details>
+
+75. A company is storing data in Amazon S3 Glacier. The security engineer implemented a new vault lock policy for 10TB of data and called initiate-vault-lock operation 12 hours ago. The audit team identified a typo in the policy that is allowing unintended access to the vault. What is the MOST cost-effective way to correct this?
+    - [ ] A. Call the abort-vault-lock operation. Update the policy. Call the initiate-vault-lock operation again.
+    - [ ] B. Copy the vault data to a new S3 bucket. Delete the vault. Create a new vault with the data.
+    - [ ] C. Update the policy to keep the vault lock in place.
+    - [ ] D. Update the policy. Call initiate-vault-lock operation again to apply the new policy.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct -> Amazon S3 Glacier Vault Lock allows you to enforce compliance controls on a vault with a lockable policy. When the initiate-vault-lock operation is called, the vault enters a lock-in-progress state. During this phase (which can last up to 24 hours), you can abort the lock operation if needed. Since the vault lock has only been in place for 12 hours, it is still in the lock-in-progress state, so you can use the abort-vault-lock operation to cancel it. After aborting, you can update the policy and initiate the vault lock process again.
+
+    </details>
+
+76. A company uses HTTP Live Streaming (HLS) to stream live video content to paying subscribers by using Amazon CloudFront. HLS splits the video content into chunks so that the user can request the right chunk based on different conditions. Because the video events last for several hours, the total video is made up of thousands of chunks. The origin URL is not disclosed, and every user is forced to access the CloudFront URL. The company has a web application that authenticates the paying users against an internal repository and a CloudFront key pair that is already issued. What is the simplest and MOST effective way to protect the content?
+    - [ ] A. Develop the application to use the CloudFront key pair to create signed URLs that users will use to access the content.
+    - [ ] B. Develop the application to use the CloudFront key pair to set the signed cookies that users will use to access the content.
+    - [ ] C. Develop the application to issue a security token that Lambda@Edge will receive to authenticate and authorize access to the content.
+    - [ ] D. Keep the CloudFront URL encrypted inside the application, and use AWS KMS to resolve the URL on-the-fly after the user is authenticated.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> Since HLS splits video content into many small chunks (thousands in this case), signed URLs (Option A) would require generating and managing thousands of signed URLs for each user session. This would be inefficient.
+      - B: Correct ->  With signed cookies, the application authenticates users and issues a signed cookie. The user's browser includes this cookie in every request to CloudFront, granting seamless access to all chunks without requiring individual signed URLs.
+      - C: Incorrect -> Unlike Option C (Lambda@Edge), which introduces extra complexity and potential latency by requiring Lambda function execution for each request, signed cookies allow CloudFront to efficiently validate requests without additional processing.
+      - D: Incorrect -> Keeping URLs encrypted inside the application and decrypting them using AWS KMS adds unnecessary complexity. This approach does not provide better security than signed cookies and can create performance bottlenecks.
 
     </details>
