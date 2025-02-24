@@ -1277,3 +1277,279 @@ Which solution will meet these requirements?
       - D: Incorrect -> Keeping URLs encrypted inside the application and decrypting them using AWS KMS adds unnecessary complexity. This approach does not provide better security than signed cookies and can create performance bottlenecks.
 
     </details>
+
+77. AWS CloudTrail is being used to monitor API calls in an organization. An audit revealed that CloudTrail is failing to deliver events to Amazon S3 as expected. What initial actions should be taken to allow delivery of CloudTrail events to S3? (Choose two.)
+    - [ ] A. Verify that the S3 bucket policy allow CloudTrail to write objects.
+    - [ ] B. Verify that the IAM role used by CloudTrail has access to write to Amazon CloudWatch Logs.
+    - [ ] C. Remove any lifecycle policies on the S3 bucket that are archiving objects to Amazon Glacier.
+    - [ ] D. Verify that the S3 bucket defined in CloudTrail exists.
+    - [ ] E. Verify that the log file prefix defined in CloudTrail exists in the S3 bucket.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct -> CloudTrail must have the necessary permissions to write log files to the specified S3 bucket. The bucket policy should explicitly allow CloudTrail's service principal (cloudtrail.amazonaws.com) to write objects.
+      - D: Correct -> If the specified S3 bucket does not exist or has been deleted, CloudTrail will fail to deliver logs. Ensuring that the bucket exists is a fundamental step in troubleshooting.
+
+    </details>
+
+78. What is the MOST operationally efficient way to meet this requirement?
+    - [ ] A. Create an AWS Lambda function to list all certificates and to go through each certificate to describe the certificate by using the AWS SDK. Filter on the NotAfter attribute and send an email notification. Use an Amazon EventBridge rate expression to schedule the Lambda function to run daily.
+    - [ ] B. Create an Amazon CloudWatch alarm. Add all the certificate ARNs in the AWS/CertificateManager namespace to the DaysToExpiry metric. Configure the alarm to publish a notification to an Amazon Simple Notification Service (Amazon SNS) topic when the value for the DaysToExpiry metric is less than or equal to 31.
+    - [ ] C. Set up AWS Security Hub. Turn on the AWS Foundational Security Best Practices standard with integrated ACM to send findings. Configure and use a custom action by creating a rule to match the pattern from the ACM findings on the NotBefore attribute as the event source. Create an Amazon Simple Notification Service (Amazon SNS) topic as the target.
+    - [ ] D. Create an Amazon EventBridge rule by using a predefined pattern for ACM Choose the metric in the ACM Certificate Approaching Expiration event as the event pattern. Create an Amazon Simple Notification Service (Amazon SNS) topic as the target.
+
+    <details>
+       <summary>Answer</summary>
+
+      D.
+
+    </details>
+
+79. A Security Analyst attempted to troubleshoot the monitoring of suspicious security group changes. The Analyst was told that there is an Amazon CloudWatch alarm in place for these AWS CloudTrail log events. The Analyst tested the monitoring setup by making a configuration change to the security group but did not receive any alerts. Which of the following troubleshooting steps should the Analyst perform?
+    - [ ] A. Ensure that CloudTrail and S3 bucket access logging is enabled for the Analyst's AWS account. B. Verify that a metric filter was created and then mapped to an alarm. Check the alarm notification action.
+    - [ ] B. Verify that a metric filter was created and then mapped to an alarm. Check the alarm notification action.
+    - [ ] C. Check the CloudWatch dashboards to ensure that there is a metric configured with an appropriate dimension for security group changes.
+    - [ ] D. Verify that the Analyst's account is mapped to an IAM policy that includes permissions for cloudwatch: GetMetricStatistics and Cloudwatch: ListMetrics.
+
+    <details>
+       <summary>Answer</summary>
+
+      B: Correct -> AWS CloudTrail records API activity, including security group changes, but CloudTrail alone does not generate alerts. To trigger an alarm for security group changes, a CloudWatch Logs metric filter must be created based on the specific log events from CloudTrail. The metric filter should be mapped to a CloudWatch alarm that is configured to trigger when a security group modification event occurs. Even if the alarm is correctly configured, the alert may not be received if the SNS topic (or another notification action) is misconfigured or the recipient is not subscribed.
+
+    </details>
+
+80. An Amazon API Gateway API invokes an AWS Lambda function that needs to interact with a software-as-a-service (SaaS) platform. A unique client token is generated in the SaaS platform to grant access to the Lambda function. A security engineer needs to design a solution to encrypt the access token at rest and pass the token to the Lambda function at runtime. Which solution will meet these requirements MOST cost-effectively?
+    - [ ] A. Store the client token as a secret in AWS Secrets Manager. Use the AWS SDK to retrieve the secretin the Lambda function.
+    - [ ] B. Configure a token-based Lambda authorizer in API Gateway.
+    - [ ] C. Store the client token as a SecureString parameter in AWS Systems Manager Parameter Store. Use the AWS SDK to retrieve the value of the SecureString parameter in the Lambda function.
+    - [ ] D. Use AWS Key Management Service (AWS KMS) to encrypt the client token. Pass the token to the Lambda function at runtime through an environment variable.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> While AWS Secrets Manager also encrypts secrets and allows retrieval, it is more expensive than AWS Systems Manager Parameter Store, making it less cost-effective.
+      - B: Incorrect -> This approach is not relevant to securely storing the token at rest; it is used for authentication and authorization of API Gateway requests.
+      - C: Correct.
+      - D: Incorrect -> Encrypting the token manually with AWS KMS and passing it through an environment variable is less secure, as environment variables persist in memory and can be exposed in logs.
+
+    </details>
+
+81. A company is using an Amazon CloudFront distribution to deliver content from two origins. One origin is a dynamic application that is hosted on Amazon EC2 instances. The other origin is an Amazon S3 bucket for static assets. A security analysis shows that HTTPS responses from the application do not comply with a security requirement to provide an X-Frame-Options HTTP header to prevent frame-related cross-site scripting attacks. A security engineer must make the full stack compliant by adding the missing HTTP header to the responses. Which solution will meet these requirements?
+    - [ ] A. Create a Lambda@Edge function. Include code to add the X-Frame-Options header to the response. Configure the function to run in response to the CloudFront origin response event.
+    - [ ] B. Create a Lambda@Edge function. Include code to add the X-Frame-Options header to the response. Configure the function to run in response to the CloudFront viewer request event.
+    - [ ] C. Update the CloudFront distribution by adding X-Frame-Options to custom headers in the origin settings.
+    - [ ] D. Customize the EC2 hosted application to add the X-Frame-Options header to the responses that are returned to CloudFront.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct ->
+        - A Lambda@Edge function allows modifying HTTP responses before they reach the client.
+        - By setting it to run on the CloudFront origin response event, it ensures that all responses from both the EC2-based dynamic application and the S3 bucket include the X-Frame-Options header.
+        - This method does not require modifying the origin application or the S3 configuration.
+        - It centralizes security enforcement at the CloudFront layer, ensuring uniform compliance.
+      - B: Incorrect -> ThThe viewer request event runs before CloudFront forwards the request to the origin.
+      - C: Incorrect -> CloudFront's origin settings only allow adding custom headers in the request to the origin (not in the response).
+      - D: Incorrect -> While updating the EC2-hosted application would work for dynamic content, it does not apply to responses from the S3 bucket.
+
+    </details>
+
+82. A security engineer is investigating a malware infection that has spread across a set of Amazon EC2 instances. A key indicator of the compromise is outbound traffic on TCP port 2905 to a set of command and control hosts on the internet. The security engineer creates a network ACL rule that denies the identified outbound traffic. The security engineer applies the network ACL rule to the subnet of the EC2 instances. The security engineer must identify any EC2 instances that are trying to communicate on TCP port 2905. Which solution will identify the affected EC2 instances with the LEAST operational effort?
+    - [ ] A. Create a Network Access Scope in Amazon VPC Network Access Analyzer. Use the Network Access Scope to identify EC2 instances that try to send traffic to TCP port 2905.
+    - [ ] B. Enable VPC flow logs for the VPC where the affected EC2 instances are located. Configure the flow logs to capture rejected traffic. In the flow logs, search for REJECT records that have a destination TCP port of 2905.
+    - [ ] C. Enable Amazon GuardDuty. Create a custom GuardDuty IP list to create a finding when an EC2 instance tries to communicate with one of the command and control hosts. Use Amazon Detective to identify the EC2 instances that initiate the communication.
+    - [ ] D. Create a firewall in AWS Network Firewall. Attach the firewall to the subnet of the EC2 instances. Create a custom rule to identify and log traffic from the firewall on TCP port 2905. Create an Amazon CloudWatch Logs metric filter to identify firewall logs that reference traffic on TCP port 2905.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Incorrect -> Network Access Analyzer helps analyze network access policies and paths but does not provide real-time monitoring or logs of actual traffic attempts. It identifies potential access issues rather than actively logging traffic from infected instances.
+      - B: Correct -> VPC Flow Logs provide a straightforward way to capture network traffic metadata for all instances in a VPC without requiring additional infrastructure. By filtering flow logs for REJECT records with destination TCP port 2905, the security engineer can quickly identify which EC2 instances are attempting to communicate with the command and control (C2) hosts.
+      - C: Incorrect -> GuardDuty can detect malicious activity, but it does not natively analyze network ACL blocks. Setting up custom threat lists and correlating findings in Detective adds operational complexity.
+      - D: Incorrect -> Setting up an AWS Network Firewall is more complex and requires additional infrastructure. CloudWatch Logs metric filters would need continuous monitoring and custom rule creation, increasing operational effort.
+
+    </details>
+
+83. A company runs workloads on Amazon EC2 instances. The company needs to continually monitor the EC2 instances for software vulnerabilities and must display the findings in AWS Security Hub. The company must not install agents on the EC2 instances. Which solution will meet these requirements?
+    - [ ] A. Enable Amazon Inspector. Set the scan mode to hybrid scanning. Enable the integration for Amazon Inspector in Security Hub.
+    - [ ] B. Use Security Hub to enable the AWS Foundational Security Best Practices standard. Wait for Security Hub to generate the findings.
+    - [ ] C. Enable Amazon GuardDuty. Initiate on-demand malware scans by using GuardDuty Malware Protection. Enable the integration for GuardDuty in Security Hub.
+    - [ ] D. Use AWS Config managed rules to detect EC2 software vulnerabilities. Ensure that Security Hub has the AWS Config integration enabled.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Amazon Inspector is an AWS service designed specifically for identifying software vulnerabilities and unintended network exposure of Amazon EC2 instances and container images in Amazon Elastic Container Registry (ECR). It provides continuous scanning for Common Vulnerabilities and Exposures (CVEs) without requiring an agent when using hybrid scanning. Hybrid scanning mode enables agentless vulnerability detection, which meets the requirement of not installing agents. Amazon Inspector integrates with AWS Security Hub, allowing vulnerability findings to be displayed in Security Hub.
+
+    </details>
+
+84. A security engineer needs to analyze Apache web server access logs that are stored in an Amazon S3 bucket. Amazon EC2 instance web servers generated the logs. The EC2 instances have the Amazon CloudWatch agent installed and configured to report their access logs.  The security engineer needs to use a query in Amazon Athena to analyze the logs. The query must identify IP addresses that have attempted and failed to access restricted web server content held at the /admin URL path. The query also must identify the URLs that the IP addresses attempted to access. Which query will meet these requirements?
+    - [ ] A. SELECT client_ip, client_request FROM logs WHERE client_request LIKE '%/admin%' AND server_status = '403'
+    - [ ] B. SELECT client_ip FROM logs WHERE client_request CONTAINS '%/admin%' AND server_status = '401' GROUP BY client_ip
+    - [ ] C. SELECT DISTINCT (client_ip), client_request, client_id FROM logs WHERE server status = '403' LIMIT 1000
+    - [ ] D. SELECT DISTINCT (client_ip), client_request FROM logs WHERE user_id <> 'admin' AND server_status = '401!'
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct
+      - B: Incorrect -> Only retrieves client_ip, but does not return the URLs attempted, which is required.
+      - C: Incorrect -> Does not specifically filter attempts to /admin, which is a requirement.
+      - D: Incorrect -> Assumes filtering by user_id <> 'admin' is necessary, which is not required.
+
+    </details>
+
+85. A company uses Amazon Cognito as an OAuth 2.0 identity platform for its web and mobile applications. The company needs to capture successful and unsuccessful login attempts. The company also needs to query the data about the login attempts. Which solution will meet these requirements?
+    - [ ] A. Configure Cognito to send logs of user activity to Amazon CloudWatch. Configure Amazon EventBridge to invoke an AWS Lambda function to export the logs to an Amazon S3 bucket. Use Amazon Athena to query the logs for event names of SignUp with event sources of cognito-idp.amazonaws.com.
+    - [ ] B. Enable AWS CloudTrail to deliver logs to an Amazon S3 bucket. Use Amazon Athena to query the logs for event names of InitiateAuth with event sources of cognito-idp.amazonaws.com.
+    - [ ] C. Configure AWS CloudTrail to send Cognito CloudTrail events to Amazon CloudWatch for monitoring. Query the event logs for event names of SignUp with event sources of cognito-idp.amazonaws.com.
+    - [ ] D. Configure Amazon CloudWatch metrics to monitor and report Cognito events. Create a CloudWatch dashboard for the provided metrics. Display the Cognito user pools for event names of InitiateAuth with event sources of cognito-idp.amazonaws.com.
+
+    <details>
+       <summary>Answer</summary>
+
+      - B.
+
+    </details>
+
+86. A company is migrating its Amazon EC2 based applications to use Instance Metadata Service Version 2 (IMDSv2). A security engineer needs to determine whether any of the EC2 instances are still using Instance Metadata Service Version 1 (IMDSv1). What should the security engineer do to confirm that the IMDSv1 endpoint is no longer being used?
+    - [ ] A. Configure logging on the Amazon CloudWatch agent for IMDSv1 as part of EC2 instance startup. Create a metric filter and a CloudWatch dashboard. Track the metric in the dashboard.
+    - [ ] B. Create an Amazon CloudWatch dashboard. Verify that the EC2:MetadataNoToken metric is zero across all EC2 instances. Monitor the dashboard.
+    - [ ] C. Create a security group that blocks access to HTTP for the IMDSv1 endpoint. Attach the security group to all EC2 instances.
+    - [ ] D. Configure user data scripts for all EC2 instances to send logging information to AWS CloudTrail when IMDSv1 is used. Create a metric filter and an Amazon CloudWatch dashboard. Track the metric in the dashboard.
+
+    <details>
+       <summary>Answer</summary>
+
+      - B: Correct -> IMDSv2 requires requests to the Instance Metadata Service to include a session token. IMDSv1 does not require a session token and is considered less secure. AWS provides the EC2:MetadataNoToken metric in Amazon CloudWatch, which tracks the number of IMDSv1 requests (i.e., requests without a token). If EC2:MetadataNoToken is greater than zero, some EC2 instances are still using IMDSv1. By monitoring this metric in a CloudWatch dashboard, the security engineer can confirm whether any EC2 instances are still using IMDSv1.
+
+    </details>
+
+87. A company uses AWS Config rules to identify Amazon S3 buckets that are not compliant with the company’s data protection policy. The S3 buckets are hosted in several AWS Regions and several AWS accounts. The accounts are in an organization in AWS Organizations. The company needs a solution to remediate the organization’s existing noncompliant S3 buckets and any noncompliant S3 buckets that are created in the future. Which solution will meet these requirements?
+    - [ ] A. Deploy an AWS Config aggregator with organization-wide resource data aggregation. Create an AWS Lambda function that responds to AWS Config findings of noncompliant S3 buckets by deleting or reconfiguring the S3 buckets.
+    - [ ] B. Deploy an AWS Config aggregator with organization-wide resource data aggregation. Create an SCP that contains a Deny statement that prevents the creation of new noncompliant S3 buckets. Apply the SCP to all OUs in the organization.
+    - [ ] C. Deploy an AWS Config aggregator that scopes only the accounts and Regions that the company currently uses. Create an AWS Lambda function that responds to AWS Config findings of noncompliant S3 buckets by deleting or reconfiguring the S3 buckets.
+    - [ ] D. Deploy an AWS Config aggregator that scopes only the accounts and Regions that the company currently uses. Create an SCP that contains a Deny statement that prevents the creation of new noncompliant S3 buckets. Apply the SCP to all OUs in the organization.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A.
+
+    </details>
+
+88. A company wants to start processing sensitive data on Amazon EC2 instances. The company will use Amazon CloudWatch Logs to monitor, store, and access log files from the EC2 instances. The company’s developers use CloudWatch Logs for troubleshooting. A security engineer must implement a solution that prevents the developers from viewing the sensitive data. The solution must automatically apply to any new log groups that are created in the account in the future. Which solution will meet these requirements?
+    - [ ] A. Create a CloudWatch Logs account-wide data protection policy. Specify the appropriate data identifiers for the policy. Ensure that the developers do not have the logs:Unmask IAM permission.
+    - [ ] B. Export the CloudWatch Logs data to an Amazon S3 bucket. Set up automated discovery by using Amazon Macie on the S3 bucket. Create a custom data identifier for the sensitive data. Remove the developers’ access to CloudWatch Logs. Grant permissions for the developers to view the exported log data in Amazon S3.
+    - [ ] C. Export the CloudWatch Logs data to an Amazon S3 bucket. Set up automated discovery by using Amazon Macie on the S3 bucket. Specify the appropriate managed data identifiers. Remove the developers’ access to CloudWatch Logs. Grant permissions for the developers to view the exported log data in Amazon S3.
+    - [ ] D. Create a CloudWatch Logs data protection policy for each log group. Specify the appropriate data identifiers for the policy. Ensure that the developers do not have the logs:Unmask IAM permission.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correnct -> AWS provides CloudWatch Logs data protection policies, which allow you to automatically detect and mask sensitive data in logs. An account-wide policy ensures that all existing and future log groups automatically adhere to the same security measures. You can specify AWS-managed data identifiers (such as PII, financial data, and credentials) to automatically detect sensitive data. By default, masked data remains hidden unless a user has the logs:Unmask permission. Ensuring that developers do not have this permission prevents them from viewing sensitive data.
+
+    </details>
+
+89. A company uses an organization in AWS Organizations to help separate its Amazon EC2 instances and VPCs. The company has separate OUs for development workloads and production workloads. A security engineer must ensure that only AWS accounts in the production OU can write VPC flow logs to an Amazon S3 bucket. The security engineer is configuring the S3 bucket policy with a Condition element to allow the s3:PutObject action for VPC flow logs. How should the security engineer configure the Condition element to meet these requirements?
+    - [ ] A. Set the value of the aws:SourceOrgID condition key to be the organization ID.
+    - [ ] B. Set the value of the aws:SourceOrgPaths condition key to be the Organizations entity path of the production OU.
+    - [ ] C. Set the value of the aws:ResourceOrgID condition key to be the organization ID.
+    - [ ] D. Set the value of the aws:ResourceOrgPaths condition key to be the Organizations entity path of the production OU.
+
+    <details>
+       <summary>Answer</summary>
+
+      - aws:SourceOrgID – Specifies the organization ID of the AWS Organizations structure. It applies to requests made from within the organization but does not differentiate between different OUs. Since we need to restrict access specifically to the production OU, this is not sufficient.
+      - aws:SourceOrgPaths – Specifies the Organizations entity path (i.e., the hierarchical path within AWS Organizations) of the account making the request. This is useful when needing to allow only accounts within a specific OU to perform an action.
+      - aws:ResourceOrgID – Refers to the AWS Organization ID of the resource being accessed, which applies only to AWS-owned resources such as S3 buckets. However, the source of the request (VPC flow logs from an EC2 instance) is what we need to restrict, so this is not applicable.
+      - aws:ResourceOrgPaths – Similar to aws:SourceOrgPaths, but this applies to the resource being accessed, not the requester. Since the S3 bucket is not part of an OU (it belongs to an AWS account), this condition key is not applicable.
+      - B is correct.
+
+    </details>
+
+90. A company uses AWS Organizations to manage a small number of AWS accounts. However, the company plans to add 1,000 more accounts soon. The company allows only a centralized security team to create IAM roles for all AWS accounts and teams. Application teams submit requests for IAM roles to the security team. The security team has a backlog of IAM role requests and cannot review and provision the IAM roles quickly. The security team must create a process that will allow application teams to provision their own IAM roles. The process must also limit the scope of IAM roles and prevent privilege escalation. Which solution will meet these requirements with the LEAST operational overhead?
+    - [ ] A. Create an IAM group for each application team. Associate policies with each IAM group. Provision IAM users for each application team member. Add the new IAM users to the appropriate IAM group by using role-based access control (RBAC).
+    - [ ] B. Delegate application team leads to provision IAM roles for each team. Conduct a quarterly review of the IAM roles the team leads have provisioned. Ensure that the application team leads have the appropriate training to review IAM roles.
+    - [ ] C. Put each AWS account in its own OU. Add an SCP to each OU to grant access to only the AWS services that the teams plan to use. Include conditions in the AWS account of each team.
+    - [ ] D. Create an SCP and a permissions boundary for IAM roles. Add the SCP to the root OU so that only roles that have the permissions boundary attached can create any new IAM roles.
+
+    <details>
+       <summary>Answer</summary>
+
+      - D: Correct ->  SCPs allow centralized control over IAM permissions across AWS Organizations. By applying an SCP at the root Organizational Unit (OU) level, you ensure that IAM role creation follows security guidelines across all AWS accounts. A permissions boundary limits the maximum permissions an IAM role can have, even if broader permissions are granted elsewhere. This prevents privilege escalation and ensures application teams can only create roles within predefined security constraints. Once the SCP and permissions boundary are set up, the security team does not need to review each IAM role manually. Application teams can provision their own roles within the defined constraints, reducing the backlog.
+
+    </details>
+
+91. A medical company recently completed an acquisition and inherited an existing AWS environment. The company has an upcoming audit and is concerned about the compliance posture of its acquisition. The company must identify personal health information inside Amazon S3 buckets and must identify S3 buckets that are publicly accessible. The company needs to prepare for the audit by collecting evidence in the environment. Which combination of steps will meet these requirements with the LEAST operational overhead? (Choose three.)
+    - [ ] A. Enable Amazon Macie. Run an on-demand sensitive data discovery job that uses the PERSONAL_INFORMATION managed data identifier.
+    - [ ] B. Use AWS Glue with the Detect PII transform to identify sensitive data and to mask the sensitive data.
+    - [ ] C. Enable AWS Audit Manager. Create an assessment by using a supported framework.
+    - [ ] D. Enable Amazon GuardDuty S3 Protection. Document any findings that are related to suspicious access of S3 buckets.
+    - [ ] E. Enable AWS Security Hub. Use the AWS Foundational Security Best Practices standard. Review the controls dashboard for evidence of failed S3 Block Public Access controls.
+    - [ ] F. Enable AWS Config. Set up the s3-bucket-public-write-prohibited AWS Config managed rule.
+
+    <details>
+       <summary>Answer</summary>
+
+      - A: Correct -> Amazon Macie is an AWS service designed to automatically detect sensitive data, including personal health information (PHI) inside Amazon S3 buckets. Running an on-demand discovery job with the PERSONAL_INFORMATION managed data identifier helps in quickly identifying any PHI in the acquired S3 buckets.
+      - E: Correct -> AWS Security Hub provides a centralized dashboard for security and compliance findings across AWS accounts.
+      - F: Correnct -> AWS Config tracks configuration changes in your environment and can enforce compliance rules.
+
+    </details>
+
+92. An AWS account includes two S3 buckets: bucket1 and bucket2. The bucket2 does not have a policy defined, but bucket1 has the following bucket policy. In addition, the same account has an IAM User named `alice`, with the following IAM policy. Which buckets can user `alice` access?
+
+    ```json
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {"AWS": "arn:aws:iam::123456789012:user/alice"},
+                "Action": "S3:*",
+                "Resource": ["arn:aws:s3:::bucket1", "arn:aws:s3:::bucket1/*"]
+            }
+        ]
+    }
+    ```
+
+    ```json
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": "S3:*",
+                "Resource": ["arn:aws:s3:::bucket2", "arn:aws:s3:::bucket2/*"]
+            }
+        ]
+    }
+    ```
+
+    - [ ] A. Bucket1 only
+    - [ ] B. Bucket2 only
+    - [ ] C. Both bucket1 and bucket2
+    - [ ] D. Neither bucket1 nor bucket2
+
+    <details>
+       <summary>Answer</summary>
+
+      - The bucket policy for bucket1 explicitly allows alice full access (S3:*) to both the bucket itself (arn:aws:s3:::bucket1) and all objects within it (arn:aws:s3:::bucket1/*). Since the bucket policy is applied at the bucket level and grants alice permissions explicitly, alice has full access to bucket1.
+      - The bucket2 does not have a bucket policy (meaning there are no explicit deny or allow statements at the bucket level). The IAM policy attached to alice grants alice full access (S3:*) to both bucket2 and its objects (arn:aws:s3:::bucket2, arn:aws:s3:::bucket2/*). Since IAM policies apply directly to the user and no bucket policy contradicts this permission, alice has full access to bucket2. alice has full access to both bucket1 and bucket2, as both the bucket policy (for bucket1) and the IAM policy (for bucket2) grant access.
+
+    </details>
+
+93. A security engineer received an Amazon GuardDuty alert indicating a finding involving the Amazon EC2 instance that hosts the company's primary website. The GuardDuty finding received read: UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration. The security engineer confirmed that a malicious actor used API access keys intended for the EC2 instance from a country where the company does not operate. The security engineer needs to deny access to the malicious actor. What is the first step the security engineer should take?
+    - [ ] A. Open the EC2 console and remove any security groups that allow inbound traffic from 0.0.0.0/0.
+    - [ ] B. Install the AWS Systems Manager Agent on the EC2 instance and run an inventory report.
+    - [ ] C. Install the Amazon Inspector agent on the host and run an assessment with the CVE rules package.
+    - [ ] D. Open the IAM console and revoke all IAM sessions that are associated with the instance profile.
+
+    <details>
+       <summary>Answer</summary>
+
+      - D: Correct -> The GuardDuty finding UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration indicates that credentials associated with the IAM role assigned to the EC2 instance were compromised and used from an unauthorized location. To mitigate this issue, the first and most immediate action is to revoke all active IAM sessions associated with the instance profile. This prevents the malicious actor from continuing to use the compromised credentials.
+
+    </details>
